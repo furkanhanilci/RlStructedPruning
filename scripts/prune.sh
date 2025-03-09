@@ -1,0 +1,35 @@
+#!/bin/bash
+
+MODEL=${1}
+DATASET=${2}
+SPARSITY=${3}
+prune_strategy=${4}
+Q_FLOP_coef=${5}
+Q_Para_coef=${6}
+
+SPARSITY=$(printf "%.2f" "$SPARSITY")
+Q_FLOP_coef=$(printf "%.2f" "$Q_FLOP_coef")
+Q_Para_coef=$(printf "%.2f" "$Q_Para_coef")
+
+LOG=log
+CKPT=checkpoint
+PRETRAINED_MODEL_DIR=pretrained_model
+COMPRESSED_MODEL_DIR=compressed_model
+CKPT_DIR=${CKPT}/${MODEL}_${DATASET}_${SPARSITY}_${Q_FLOP_coef}_${Q_Para_coef}
+PRETRAINED_MODEL_PTH=${PRETRAINED_MODEL_DIR}/${MODEL}_${DATASET}_pretrained.pth
+COMPRESSED_MODEL_PTH=${COMPRESSED_MODEL_DIR}/${MODEL}_${DATASET}_${SPARSITY}_${Q_FLOP_coef}_${Q_Para_coef}.pth
+
+
+python -m compress --model ${MODEL} --dataset ${DATASET} --device cuda \
+                   --sparsity ${SPARSITY} --prune_strategy ${prune_strategy} --ppo \
+                   --Q_FLOP_coef ${Q_FLOP_coef} --Q_Para_coef ${Q_Para_coef} \
+                   --pretrained_pth ${PRETRAINED_MODEL_PTH} \
+                   --compressed_dir ${COMPRESSED_MODEL_DIR} \
+                   --checkpoint_dir ${CKPT_DIR} \
+                   --log_dir ${LOG} --use_wandb --save_model \
+                   # --resume --resume_epoch 5
+
+python -m evaluate --model ${MODEL} --dataset ${DATASET} --device cuda \
+                   --pretrained_pth ${PRETRAINED_MODEL_PTH} \
+                   --compressed_pth ${COMPRESSED_MODEL_PTH} \
+                   --log_dir ${LOG}

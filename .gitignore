@@ -1,0 +1,11 @@
+*.pkl
+*.pth
+*.txt
+!requirements.txt
+**/__pycache__/
+**/data/
+**/wandb/
+**/log/
+**/checkpoint/
+**/compressed_model/
+
